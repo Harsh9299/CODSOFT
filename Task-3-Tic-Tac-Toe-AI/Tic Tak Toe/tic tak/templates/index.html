@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe AI - Pro Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .settings {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .setting-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .setting-group h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .radio-btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .radio-btn:hover {
+            background: #f0f0ff;
+        }
+
+        .radio-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 1.2em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 30px auto;
+            max-width: 400px;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            font-size: 3em;
+            font-weight: bold;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell:hover:not(.filled):not(.disabled) {
+            background: #f0f0ff;
+            transform: scale(1.05);
+        }
+
+        .cell.filled {
+            cursor: not-allowed;
+        }
+
+        .cell.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .cell.x {
+            color: #ff6b6b;
+        }
+
+        .cell.o {
+            color: #4ecdc4;
+        }
+
+        .cell.winning {
+            background: #28a745;
+            color: white;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .cell {
+                font-size: 2em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Tic-Tac-Toe AI</h1>
+        <p class="subtitle">Powered by Minimax & Alpha-Beta Pruning</p>
+
+        <div class="settings">
+            <div class="setting-group">
+                <h3>Difficulty</h3>
+                <div class="radio-group" id="difficulty-group">
+                    <div class="radio-btn" data-value="easy">Easy</div>
+                    <div class="radio-btn" data-value="medium">Medium</div>
+                    <div class="radio-btn active" data-value="hard">Hard</div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>You are</h3>
+                <div class="radio-group" id="player-group">
+                    <div class="radio-btn active" data-value="X">X</div>
+                    <div class="radio-btn" data-value="O">O</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status" id="status">Click "New Game" to start</div>
+
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="new-game-btn">🔄 New Game</button>
+            <button class="btn btn-secondary" id="undo-btn" disabled>↩ Undo</button>
+            <button class="btn btn-success" id="stats-btn">📊 Statistics</button>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div class="modal" id="stats-modal">
+        <div class="modal-content">
+            <h2>📊 Game Statistics</h2>
+            <div class="stats-grid" id="stats-content">
+                <div class="stat-item">
+                    <div class="stat-value" id="total-games">0</div>
+                    <div class="stat-label">Total Games</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="human-wins">0</div>
+                    <div class="stat-label">Your Wins</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="ai-wins">0</div>
+                    <div class="stat-label">AI Wins</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="draws">0</div>
+                    <div class="stat-label">Draws</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="win-rate">0%</div>
+                    <div class="stat-label">Your Win Rate</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avg-moves">0</div>
+                    <div class="stat-label">Avg Moves</div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="closeStatsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameId = null;
+        let difficulty = 'hard';
+        let player = 'X';
+        let currentPlayer = null;
+        let gameOver = false;
+        let humanPlayer = 'X';
+        let aiPlayer = 'O';
+
+        // API base URL (change for production)
+        const API_URL = 'http://localhost:5000/api';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            disableBoard();
+        });
+
+        function setupEventListeners() {
+            // Difficulty selection
+            document.querySelectorAll('#difficulty-group .radio-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectRadio('difficulty-group', btn.dataset.value);
+                    difficulty = btn.dataset.value;
+                });
+            });
+
+            // Player selection
+            document.querySelectorAll('#player-group .radio-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectRadio('player-group', btn.dataset.value);
+                    player = btn.dataset.value;
+                });
+            });
+
+            // Board cells
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.addEventListener('click', () => handleCellClick(cell));
+            });
+
+            // Control buttons
+            document.getElementById('new-game-btn').addEventListener('click', startNewGame);
+            document.getElementById('undo-btn').addEventListener('click', undoMove);
+            document.getElementById('stats-btn').addEventListener('click', showStatistics);
+        }
+
+        function selectRadio(groupId, value) {
+            document.querySelectorAll(`#${groupId} .radio-btn`).forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.value === value) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        async function startNewGame() {
+            try {
+                updateStatus('Starting new game...');
+                clearBoard();
+                
+                const response = await fetch(`${API_URL}/game/new`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ difficulty, player })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    updateStatus('Error: ' + data.error);
+                    return;
+                }
+
+                gameId = data.game_id;
+                humanPlayer = data.human;
+                aiPlayer = data.ai;
+                currentPlayer = data.current_player;
+                gameOver = false;
+                
+                updateBoard(data.board);
+                enableBoard();
+                
+                document.getElementById('undo-btn').disabled = true;
+                
+                if (data.ai_move !== undefined) {
+                    // AI moved first
+                    updateStatus(`AI moved to position ${data.ai_move + 1}. Your turn!`);
+                } else {
+                    updateStatus('Your turn!');
+                }
+            } catch (error) {
+                console.error('Error starting game:', error);
+                updateStatus('Error starting game. Is the server running?');
+            }
+        }
+
+        async function handleCellClick(cell) {
+            if (gameOver || cell.classList.contains('filled') || !gameId) {
+                return;
+            }
+
+            const position = parseInt(cell.dataset.index);
+            
+            try {
+                // Disable board during move
+                disableBoard();
+                updateStatus('Processing move...');
+
+                const response = await fetch(`${API_URL}/game/${gameId}/move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ position })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    updateStatus('Error: ' + data.error);
+                    enableBoard();
+                    return;
+                }
+
+                updateBoard(data.board);
+                
+                // Enable undo if moves have been made
+                if (data.board.filter(c => c !== ' ').length >= 2) {
+                    document.getElementById('undo-btn').disabled = false;
+                }
+
+                if (data.game_over) {
+                    handleGameOver(data.winner, data.board);
+                } else {
+                    updateStatus(`AI is thinking...`);
+                    // Small delay for better UX
+                    setTimeout(() => {
+                        updateStatus(`Your turn!`);
+                        enableBoard();
+                    }, 300);
+                }
+            } catch (error) {
+                console.error('Error making move:', error);
+                updateStatus('Error making move');
+                enableBoard();
+            }
+        }
+
+        async function undoMove() {
+            if (!gameId) return;
+
+            try {
+                updateStatus('Undoing move...');
+                
+                const response = await fetch(`${API_URL}/game/${gameId}/undo`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    updateStatus('Error: ' + data.error);
+                    return;
+                }
+
+                updateBoard(data.board);
+                updateStatus('Move undone! Your turn.');
+                
+                // Check if we can still undo
+                const moveCount = data.board.filter(c => c !== ' ').length;
+                if (moveCount < 2) {
+                    document.getElementById('undo-btn').disabled = true;
+                }
+            } catch (error) {
+                console.error('Error undoing move:', error);
+                updateStatus('Error undoing move');
+            }
+        }
+
+        async function showStatistics() {
+            try {
+                const response = await fetch(`${API_URL}/statistics`);
+                const data = await response.json();
+
+                document.getElementById('total-games').textContent = data.total_games;
+                document.getElementById('human-wins').textContent = data.human_wins;
+                document.getElementById('ai-wins').textContent = data.ai_wins;
+                document.getElementById('draws').textContent = data.draws;
+                document.getElementById('win-rate').textContent = data.win_rate.toFixed(1) + '%';
+                document.getElementById('avg-moves').textContent = data.avg_moves.toFixed(1);
+
+                document.getElementById('stats-modal').classList.add('active');
+            } catch (error) {
+                console.error('Error fetching statistics:', error);
+                alert('Error loading statistics');
+            }
+        }
+
+        function closeStatsModal() {
+            document.getElementById('stats-modal').classList.remove('active');
+        }
+
+        function handleGameOver(winner, board) {
+            gameOver = true;
+            disableBoard();
+
+            let message = '';
+            if (winner === 'TIE') {
+                message = "It's a tie! 🤝";
+            } else if (winner === humanPlayer) {
+                message = `You won! 🎉`;
+                if (difficulty === 'hard') {
+                    message = `AMAZING! You beat the unbeatable AI! 🎉`;
+                }
+            } else {
+                message = `AI wins! Better luck next time! 🤖`;
+            }
+
+            updateStatus(message);
+            
+            // Highlight winning combination
+            highlightWinner(winner, board);
+            
+            // Show play again prompt after delay
+            setTimeout(() => {
+                if (confirm(message + '\n\nPlay again?')) {
+                    startNewGame();
+                }
+            }, 1000);
+        }
+
+        function highlightWinner(winner, board) {
+            if (winner === 'TIE') return;
+
+            const winningCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],  // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],  // Columns
+                [0, 4, 8], [2, 4, 6]               // Diagonals
+            ];
+
+            for (const combo of winningCombos) {
+                if (combo.every(i => board[i] === winner)) {
+                    combo.forEach(i => {
+                        document.querySelector(`[data-index="${i}"]`).classList.add('winning');
+                    });
+                    break;
+                }
+            }
+        }
+
+        function updateBoard(board) {
+            board.forEach((symbol, index) => {
+                const cell = document.querySelector(`[data-index="${index}"]`);
+                cell.textContent = symbol === ' ' ? '' : symbol;
+                cell.classList.remove('x', 'o', 'filled');
+                
+                if (symbol !== ' ') {
+                    cell.classList.add('filled');
+                    cell.classList.add(symbol.toLowerCase());
+                }
+            });
+        }
+
+        function clearBoard() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('x', 'o', 'filled', 'winning', 'disabled');
+            });
+        }
+
+        function enableBoard() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                if (!cell.classList.contains('filled')) {
+                    cell.classList.remove('disabled');
+                }
+            });
+        }
+
+        function disableBoard() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.add('disabled');
+            });
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('stats-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'stats-modal') {
+                closeStatsModal();
+            }
+        });
+    </script>
+</body>
+</html>
